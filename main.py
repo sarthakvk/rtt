@@ -121,9 +121,11 @@ html = """
 </html>
 """
 
+
 @app.get("/")
 async def get():
     return HTMLResponse(html)
+
 
 async def receive_audio(websocket: WebSocket, audio_stream):
     try:
@@ -133,10 +135,13 @@ async def receive_audio(websocket: WebSocket, audio_stream):
     except WebSocketDisconnect:
         pass
 
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    audio_stream, recognizer = get_speech_recognizer_audio_sink(websocket, main_event_loop)
+    audio_stream, recognizer = get_speech_recognizer_audio_sink(
+        websocket, main_event_loop
+    )
 
     try:
         await receive_audio(websocket, audio_stream)
@@ -145,6 +150,8 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         recognizer.stop_continuous_recognition_async()
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

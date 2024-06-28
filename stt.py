@@ -13,8 +13,14 @@ speech_config = speechsdk.SpeechConfig(
 speech_config.speech_recognition_language = Language.ENGLISH.value
 
 
-def recognized_callback(websocket, event_loop, evt: speechsdk.SpeechRecognitionEventArgs):
-    tts = TextToSpeech(Language.ENGLISH, AzureVoiceName.SPANISH, WebsocketAudioOutputStream(websocket, event_loop))
+def recognized_callback(
+    websocket, event_loop, evt: speechsdk.SpeechRecognitionEventArgs
+):
+    tts = TextToSpeech(
+        Language.ENGLISH,
+        AzureVoiceName.SPANISH,
+        WebsocketAudioOutputStream(websocket, event_loop),
+    )
     try:
         print(evt.result.text)
         if evt.result.text:
@@ -27,9 +33,9 @@ def recognized_callback(websocket, event_loop, evt: speechsdk.SpeechRecognitionE
         print(e)
 
 
-def get_speech_recognizer_audio_sink(websocket, event_loop) -> (
-    Tuple[speechsdk.audio.PushAudioInputStream, speechsdk.SpeechRecognizer]
-):
+def get_speech_recognizer_audio_sink(
+    websocket, event_loop
+) -> Tuple[speechsdk.audio.PushAudioInputStream, speechsdk.SpeechRecognizer]:
     audio_stream = speechsdk.audio.PushAudioInputStream(
         speechsdk.audio.AudioStreamFormat(samples_per_second=16000)
     )

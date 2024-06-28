@@ -9,6 +9,7 @@ from azure.cognitiveservices.speech.audio import (
 from asyncio import run_coroutine_threadsafe, get_event_loop
 from fastapi import WebSocket
 
+
 class WebsocketAudioOutputStream(PushAudioOutputStreamCallback):
     def __init__(self, websocket: WebSocket, event_loop):
         self.websocket = websocket
@@ -17,7 +18,9 @@ class WebsocketAudioOutputStream(PushAudioOutputStreamCallback):
     def write(self, audio_buffer: memoryview) -> int:
         try:
             audio_data = audio_buffer.tobytes()
-            future = run_coroutine_threadsafe(self.websocket.send_bytes(audio_data), self.event_loop)
+            future = run_coroutine_threadsafe(
+                self.websocket.send_bytes(audio_data), self.event_loop
+            )
             future.result()
             return len(audio_data)
         except Exception as e:
@@ -26,6 +29,7 @@ class WebsocketAudioOutputStream(PushAudioOutputStreamCallback):
 
     def close(self):
         print("closed the output")
+
 
 class TextToSpeech:
     def __init__(
@@ -41,7 +45,9 @@ class TextToSpeech:
             subscription=os.getenv("AZURE_TTS_API_KEY"),
         )
         self.speech_config.speech_recognition_language = speech_lang.value
-        self.speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Raw24Khz16BitMonoPcm)
+        self.speech_config.set_speech_synthesis_output_format(
+            speechsdk.SpeechSynthesisOutputFormat.Raw24Khz16BitMonoPcm
+        )
         properties = {
             "SpeechSynthesis_FrameTimeoutInterval": "100000000",
             "SpeechSynthesis_RtfTimeoutThreshold": "10",
@@ -105,7 +111,7 @@ class TextToSpeech:
     def __enter__(self):
         self.open()
         return self
-    
+
     def __exit__(self):
         self.close()
         return False
