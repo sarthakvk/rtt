@@ -17,8 +17,19 @@
         var source;
         var playing = false;
 
+        function generateRandomString(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            const charactersLength = characters.length;
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+
         function startStream() {
-            ws = new WebSocket("ws://localhost:8000/ws");
+            rand_id = generateRandomString(10);
+            ws = new WebSocket(`ws://localhost:8000/ws/${rand_id}`);  // Update this to clientB for the second client
             ws.binaryType = 'arraybuffer';  // Ensure binary data type
             ws.onopen = function(event) {
                 console.log("WebSocket is open now.");

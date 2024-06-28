@@ -14,12 +14,12 @@ speech_config.speech_recognition_language = Language.ENGLISH.value
 
 
 def recognized_callback(
-    websocket, event_loop, evt: speechsdk.SpeechRecognitionEventArgs
+    client_id, connections, event_loop, evt: speechsdk.SpeechRecognitionEventArgs
 ):
     tts = TextToSpeech(
         Language.ENGLISH,
         AzureVoiceName.SPANISH,
-        WebsocketAudioOutputStream(websocket, event_loop),
+        WebsocketAudioOutputStream(client_id, connections, event_loop),
     )
     try:
         print(evt.result.text)
@@ -34,7 +34,7 @@ def recognized_callback(
 
 
 def get_speech_recognizer_audio_sink(
-    websocket, event_loop
+    client_id, connections, event_loop
 ) -> Tuple[speechsdk.audio.PushAudioInputStream, speechsdk.SpeechRecognizer]:
     audio_stream = speechsdk.audio.PushAudioInputStream(
         speechsdk.audio.AudioStreamFormat(samples_per_second=16000)
@@ -46,7 +46,10 @@ def get_speech_recognizer_audio_sink(
         audio_config=audio_config,
         language=Language.HINDI.value,
     )
-    partial_recognized_callback = partial(recognized_callback, websocket, event_loop)
+
+    partial_recognized_callback = partial(
+        recognized_callback, client_id, connections, event_loop
+    )
     speech_recognizer.recognized.connect(partial_recognized_callback)
     # speech_recognizer.recognizing.connect(recognizing_callback)
     speech_recognizer.session_started.connect(lambda e: print("session started"))

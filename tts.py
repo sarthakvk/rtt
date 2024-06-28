@@ -1,4 +1,5 @@
 import os
+from typing import Dict
 import azure.cognitiveservices.speech as speechsdk
 from .common import gpt_client, Language, AzureVoiceName
 from azure.cognitiveservices.speech.audio import (
@@ -11,17 +12,21 @@ from fastapi import WebSocket
 
 
 class WebsocketAudioOutputStream(PushAudioOutputStreamCallback):
-    def __init__(self, websocket: WebSocket, event_loop):
-        self.websocket = websocket
+    def __init__(self, client_id: str, websockets: Dict[str, WebSocket], event_loop):
+        self.websockets = websockets
         self.event_loop = event_loop
+        self.client_id = client_id
 
     def write(self, audio_buffer: memoryview) -> int:
         try:
             audio_data = audio_buffer.tobytes()
-            future = run_coroutine_threadsafe(
-                self.websocket.send_bytes(audio_data), self.event_loop
-            )
-            future.result()
+            for c_id, websocket in self.websockets.items():
+                if not websocket or c_id == self.client_id:
+                    continue
+                future = run_coroutine_threadsafe(
+                    websocket.send_bytes(audio_data), self.event_loop
+                )
+                future.result()
             return len(audio_data)
         except Exception as e:
             print(f"Error sending audio data: {e}")

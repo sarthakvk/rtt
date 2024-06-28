@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import asyncio
 
@@ -7,7 +8,17 @@ from .stt import get_speech_recognizer_audio_sink
 
 load_dotenv()
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this to the necessary origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 main_event_loop = asyncio.get_event_loop()
+
+# Store WebSocket connections
+connections = {}
 
 html = """
 <!DOCTYPE html>
@@ -29,8 +40,19 @@ html = """
         var source;
         var playing = false;
 
+        function generateRandomString(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            const charactersLength = characters.length;
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+
         function startStream() {
-            ws = new WebSocket("ws://localhost:8000/ws");
+            rand_id = generateRandomString(10);
+            ws = new WebSocket(`wss://b88e-2405-201-6806-801b-d8c4-6dcc-29dc-c06.ngrok-free.app/wss/${rand_id}/`);
             ws.binaryType = 'arraybuffer';  // Ensure binary data type
             ws.onopen = function(event) {
                 console.log("WebSocket is open now.");
@@ -127,7 +149,7 @@ async def get():
     return HTMLResponse(html)
 
 
-async def receive_audio(websocket: WebSocket, audio_stream):
+async def receive_audio(websocket: WebSocket, audio_stream, client_id: str):
     try:
         while True:
             data = await websocket.receive_bytes()
@@ -136,19 +158,21 @@ async def receive_audio(websocket: WebSocket, audio_stream):
         pass
 
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+@app.websocket("/wss/{client_id}/")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await websocket.accept()
+    connections[client_id] = websocket
     audio_stream, recognizer = get_speech_recognizer_audio_sink(
-        websocket, main_event_loop
+        client_id, connections, main_event_loop
     )
 
     try:
-        await receive_audio(websocket, audio_stream)
+        await receive_audio(websocket, audio_stream, client_id)
     except Exception as e:
         print(f"Error: {e}")
     finally:
         recognizer.stop_continuous_recognition_async()
+        connections[client_id] = None
 
 
 if __name__ == "__main__":
