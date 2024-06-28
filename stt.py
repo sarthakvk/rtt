@@ -1,25 +1,33 @@
 """Speech to text"""
 
+from functools import partial
 import os
 from typing import Tuple
 import azure.cognitiveservices.speech as speechsdk
-from .tts import TextToSpeech
+from .tts import TextToSpeech, WebsocketAudioOutputStream
 from .common import Language, AzureVoiceName
 
 speech_config = speechsdk.SpeechConfig(
     subscription=os.getenv("AZURE_TTS_API_KEY"), region=os.getenv("AZURE_TTS_REGION")
 )
-speech_config.speech_recognition_language = "en-US"
-
-tts = TextToSpeech(text_lang=Language.ENGLISH, speech_lang=AzureVoiceName.SPANISH)
+speech_config.speech_recognition_language = Language.ENGLISH.value
 
 
-def recognized_callback(evt):
-    print(evt.result.text)
-    tts.write_translated(evt.result.text)
+def recognized_callback(websocket, event_loop, evt: speechsdk.SpeechRecognitionEventArgs):
+    tts = TextToSpeech(Language.ENGLISH, AzureVoiceName.SPANISH, WebsocketAudioOutputStream(websocket, event_loop))
+    try:
+        print(evt.result.text)
+        if evt.result.text:
+            tsk = tts.open()
+            tts.write_translated(evt.result.text)
+            tts.close()
+            res = tsk.get()
+            print(res)
+    except Exception as e:
+        print(e)
 
 
-def get_speech_recognizer_audio_sink() -> (
+def get_speech_recognizer_audio_sink(websocket, event_loop) -> (
     Tuple[speechsdk.audio.PushAudioInputStream, speechsdk.SpeechRecognizer]
 ):
     audio_stream = speechsdk.audio.PushAudioInputStream(
@@ -28,9 +36,12 @@ def get_speech_recognizer_audio_sink() -> (
     audio_config = speechsdk.audio.AudioConfig(stream=audio_stream)
 
     speech_recognizer = speechsdk.SpeechRecognizer(
-        speech_config=speech_config, audio_config=audio_config
+        speech_config=speech_config,
+        audio_config=audio_config,
+        language=Language.HINDI.value,
     )
-    speech_recognizer.recognized.connect(recognized_callback)
+    partial_recognized_callback = partial(recognized_callback, websocket, event_loop)
+    speech_recognizer.recognized.connect(partial_recognized_callback)
     # speech_recognizer.recognizing.connect(recognizing_callback)
     speech_recognizer.session_started.connect(lambda e: print("session started"))
     speech_recognizer.session_stopped.connect(lambda e: print("session stopped"))

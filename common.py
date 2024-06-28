@@ -10,9 +10,10 @@ gpt_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class AzureVoiceName(str, enum.Enum):
     SPANISH = "es-ES-ElviraNeural"
-    ENGLISH = "en-US-AvaMultilingualNeural"
+    ENGLISH = "en-IN-Ravi"
 
 
 class Language(str, enum.Enum):
     ENGLISH = "en-US"
     SPANISH = "en-ES"
+    HINDI = "hi-IN"
