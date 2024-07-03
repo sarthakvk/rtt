@@ -1,16 +1,17 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import asyncio
 
 from .stt import get_speech_recognizer_audio_sink
+from .common import Language
 
 load_dotenv()
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this to the necessary origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,6 +29,20 @@ html = """
 </head>
 <body>
     <h1>WebSocket Audio Stream</h1>
+    <label for="speak-language">Speak Language:</label>
+    <select id="speak-language">
+        <option value="en-US">English</option>
+        <option value="es-ES">Spanish</option>
+        <option value="hi-IN">Hindi</option>
+    </select>
+    <br>
+    <label for="listen-language">Listen Language:</label>
+    <select id="listen-language">
+        <option value="en-US">English</option>
+        <option value="es-ES">Spanish</option>
+        <option value="hi-IN">Hindi</option>
+    </select>
+    <br>
     <button onclick="startStream()">Start Stream</button>
     <button onclick="stopStream()">Stop Stream</button>
     <script>
@@ -51,8 +66,10 @@ html = """
         }
 
         function startStream() {
+            const speakLanguage = document.getElementById('speak-language').value;
+            const listenLanguage = document.getElementById('listen-language').value;
             rand_id = generateRandomString(10);
-            ws = new WebSocket(`wss://b88e-2405-201-6806-801b-d8c4-6dcc-29dc-c06.ngrok-free.app/wss/${rand_id}/`);
+            ws = new WebSocket(`wss://cc95-2401-4900-1c5b-b14-a9e4-3d27-23-b93a.ngrok-free.app/wss/${rand_id}/?speak=${speakLanguage}&listen=${listenLanguage}`);
             ws.binaryType = 'arraybuffer';  // Ensure binary data type
             ws.onopen = function(event) {
                 console.log("WebSocket is open now.");
@@ -143,11 +160,9 @@ html = """
 </html>
 """
 
-
 @app.get("/")
 async def get():
     return HTMLResponse(html)
-
 
 async def receive_audio(websocket: WebSocket, audio_stream, client_id: str):
     try:
@@ -157,13 +172,17 @@ async def receive_audio(websocket: WebSocket, audio_stream, client_id: str):
     except WebSocketDisconnect:
         pass
 
-
 @app.websocket("/wss/{client_id}/")
-async def websocket_endpoint(websocket: WebSocket, client_id: str):
+async def websocket_endpoint(websocket: WebSocket, client_id: str, speak: str = Query(...), listen: str = Query(...)):
     await websocket.accept()
     connections[client_id] = websocket
+
+    # Convert query parameters to Language enum
+    speak_language = Language(speak)
+    listen_language = Language(listen)
+
     audio_stream, recognizer = get_speech_recognizer_audio_sink(
-        client_id, connections, main_event_loop
+        client_id, connections, main_event_loop, speak_language, listen_language
     )
 
     try:
@@ -173,7 +192,6 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
     finally:
         recognizer.stop_continuous_recognition_async()
         connections[client_id] = None
-
 
 if __name__ == "__main__":
     import uvicorn
