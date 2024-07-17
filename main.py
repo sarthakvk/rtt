@@ -160,9 +160,11 @@ html = """
 </html>
 """
 
+
 @app.get("/")
 async def get():
     return HTMLResponse(html)
+
 
 async def receive_audio(websocket: WebSocket, audio_stream, client_id: str):
     try:
@@ -172,8 +174,14 @@ async def receive_audio(websocket: WebSocket, audio_stream, client_id: str):
     except WebSocketDisconnect:
         pass
 
+
 @app.websocket("/wss/{client_id}/")
-async def websocket_endpoint(websocket: WebSocket, client_id: str, speak: str = Query(...), listen: str = Query(...)):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    client_id: str,
+    speak: str = Query(...),
+    listen: str = Query(...),
+):
     await websocket.accept()
     connections[client_id] = websocket
 
@@ -192,6 +200,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, speak: str = 
     finally:
         recognizer.stop_continuous_recognition_async()
         del connections[client_id]
+
 
 if __name__ == "__main__":
     import uvicorn

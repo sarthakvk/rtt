@@ -8,11 +8,12 @@ from .tts import TextToSpeech, WebsocketAudioOutputStream
 from .common import Language, AzureVoiceName
 
 
-def recognized_callback(
-    tts: TextToSpeech, evt: speechsdk.SpeechRecognitionEventArgs
-):
+def recognized_callback(tts: TextToSpeech, evt: speechsdk.SpeechRecognitionEventArgs):
     try:
-        if evt.result.reason == speechsdk.ResultReason.TranslatedSpeech and evt.result.translations:
+        if (
+            evt.result.reason == speechsdk.ResultReason.TranslatedSpeech
+            and evt.result.translations
+        ):
             text = next(iter(evt.result.translations.values()))
             print(text)
             tsk = tts.open()
@@ -27,7 +28,8 @@ def get_speech_recognizer_audio_sink(
     client_id, connections, event_loop, speak_lang: Language, listen_lang: Language
 ) -> Tuple[speechsdk.audio.PushAudioInputStream, speechsdk.SpeechRecognizer]:
     translation_config = speechsdk.translation.SpeechTranslationConfig(
-        subscription=os.getenv("AZURE_TTS_API_KEY"), region=os.getenv("AZURE_TTS_REGION")
+        subscription=os.getenv("AZURE_TTS_API_KEY"),
+        region=os.getenv("AZURE_TTS_REGION"),
     )
     translation_config.speech_recognition_language = speak_lang.value
     translation_config.add_target_language(listen_lang.value)
@@ -47,9 +49,7 @@ def get_speech_recognizer_audio_sink(
         WebsocketAudioOutputStream(client_id, connections, event_loop),
     )
 
-    partial_recognized_callback = partial(
-        recognized_callback, tts
-    )
+    partial_recognized_callback = partial(recognized_callback, tts)
     speech_recognizer.recognized.connect(partial_recognized_callback)
     # speech_recognizer.recognizing.connect(recognizing_callback)
     speech_recognizer.session_started.connect(lambda e: print("session started"))
