@@ -19,14 +19,16 @@ class WebsocketAudioOutputStream(PushAudioOutputStreamCallback):
 
     def write(self, audio_buffer: memoryview) -> int:
         try:
+            # print("sending data to FE")
             audio_data = audio_buffer.tobytes()
             for c_id, websocket in self.websockets.items():
-                if not websocket or c_id == self.client_id:
+                if not websocket or c_id != self.client_id:
                     continue
                 future = run_coroutine_threadsafe(
                     websocket.send_bytes(audio_data), self.event_loop
                 )
                 future.result()
+            # print("data sent to FE")
             return len(audio_data)
         except Exception as e:
             print(f"Error sending audio data: {e}")
@@ -72,10 +74,8 @@ class TextToSpeech:
         self.speech_synthesizer.synthesis_completed.connect(callback)
 
     def write_translated(self, text: str):
-        out = ""
-        for translated_text in self.translate_generator(text):
-            out += translated_text
-            self.tts_request.input_stream.write(translated_text)
+        self.tts_request.input_stream.write(text)
+        print("translation written to output buffer")
 
     def translate_generator(self, text: str):
         completion = gpt_client.chat.completions.create(
@@ -102,9 +102,9 @@ class TextToSpeech:
                     yield chunk_text
 
     def close(self):
-        print("closing input stream")
+        # print("closing input stream")
         self.tts_request.input_stream.close()
-        print("Closed inp stream")
+        # print("Closed inp stream")
 
     def open(self):
         self.tts_request = speechsdk.SpeechSynthesisRequest(

@@ -12,13 +12,13 @@ def recognized_callback(
     tts: TextToSpeech, evt: speechsdk.SpeechRecognitionEventArgs
 ):
     try:
-        print(evt.result.text)
-        if evt.result.text:
+        if evt.result.reason == speechsdk.ResultReason.TranslatedSpeech and evt.result.translations:
+            text = next(iter(evt.result.translations.values()))
+            print(text)
             tsk = tts.open()
-            tts.write_translated(evt.result.text)
+            tts.write_translated(text)
             tts.close()
             res = tsk.get()
-            print(res)
     except Exception as e:
         print(e)
 
@@ -26,20 +26,19 @@ def recognized_callback(
 def get_speech_recognizer_audio_sink(
     client_id, connections, event_loop, speak_lang: Language, listen_lang: Language
 ) -> Tuple[speechsdk.audio.PushAudioInputStream, speechsdk.SpeechRecognizer]:
-    speech_config = speechsdk.SpeechConfig(
+    translation_config = speechsdk.translation.SpeechTranslationConfig(
         subscription=os.getenv("AZURE_TTS_API_KEY"), region=os.getenv("AZURE_TTS_REGION")
     )
-    speech_config.speech_recognition_language = speak_lang.value
-
+    translation_config.speech_recognition_language = speak_lang.value
+    translation_config.add_target_language(listen_lang.value)
     audio_stream = speechsdk.audio.PushAudioInputStream(
         speechsdk.audio.AudioStreamFormat(samples_per_second=16000)
     )
     audio_config = speechsdk.audio.AudioConfig(stream=audio_stream)
 
-    speech_recognizer = speechsdk.SpeechRecognizer(
-        speech_config=speech_config,
+    speech_recognizer = speechsdk.translation.TranslationRecognizer(
+        translation_config=translation_config,
         audio_config=audio_config,
-        language=speak_lang.value,
     )
 
     tts = TextToSpeech(

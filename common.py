@@ -15,5 +15,5 @@ class AzureVoiceName(str, enum.Enum):
 
 class Language(str, enum.Enum):
     ENGLISH = "en-US"
-    SPANISH = "en-ES"
+    SPANISH = "es-ES"
     HINDI = "hi-IN"

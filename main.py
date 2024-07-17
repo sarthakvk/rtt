@@ -69,7 +69,7 @@ html = """
             const speakLanguage = document.getElementById('speak-language').value;
             const listenLanguage = document.getElementById('listen-language').value;
             rand_id = generateRandomString(10);
-            ws = new WebSocket(`wss://cc95-2401-4900-1c5b-b14-a9e4-3d27-23-b93a.ngrok-free.app/wss/${rand_id}/?speak=${speakLanguage}&listen=${listenLanguage}`);
+            ws = new WebSocket(`wss://5efc-49-43-160-208.ngrok-free.app/wss/${rand_id}/?speak=${speakLanguage}&listen=${listenLanguage}`);
             ws.binaryType = 'arraybuffer';  // Ensure binary data type
             ws.onopen = function(event) {
                 console.log("WebSocket is open now.");
@@ -191,7 +191,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, speak: str = 
         print(f"Error: {e}")
     finally:
         recognizer.stop_continuous_recognition_async()
-        connections[client_id] = None
+        del connections[client_id]
 
 if __name__ == "__main__":
     import uvicorn
