@@ -69,7 +69,7 @@ html = """
             const speakLanguage = document.getElementById('speak-language').value;
             const listenLanguage = document.getElementById('listen-language').value;
             rand_id = generateRandomString(10);
-            ws = new WebSocket(`wss://5efc-49-43-160-208.ngrok-free.app/wss/${rand_id}/?speak=${speakLanguage}&listen=${listenLanguage}`);
+            ws = new WebSocket(`ws://localhost:8000/wss/${rand_id}/?speak=${speakLanguage}&listen=${listenLanguage}`);
             ws.binaryType = 'arraybuffer';  // Ensure binary data type
             ws.onopen = function(event) {
                 console.log("WebSocket is open now.");

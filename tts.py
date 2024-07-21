@@ -16,19 +16,28 @@ class WebsocketAudioOutputStream(PushAudioOutputStreamCallback):
         self.websockets = websockets
         self.event_loop = event_loop
         self.client_id = client_id
+        self.env = os.getenv('ENV')
 
     def write(self, audio_buffer: memoryview) -> int:
         try:
-            # print("sending data to FE")
             audio_data = audio_buffer.tobytes()
+
+            if self.env == "DEV":
+                websocket = self.websockets[self.client_id]
+                future = run_coroutine_threadsafe(
+                    websocket.send_bytes(audio_data), self.event_loop
+                )
+                future.result()
+                return len(audio_data)
+
             for c_id, websocket in self.websockets.items():
-                if not websocket or c_id != self.client_id:
+                if not websocket and c_id == self.client_id:
                     continue
                 future = run_coroutine_threadsafe(
                     websocket.send_bytes(audio_data), self.event_loop
                 )
                 future.result()
-            # print("data sent to FE")
+
             return len(audio_data)
         except Exception as e:
             print(f"Error sending audio data: {e}")

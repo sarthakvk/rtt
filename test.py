@@ -8,7 +8,6 @@ load_dotenv()
 
 # setup AzureOpenAI client
 gpt_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 # setup speech synthesizer
 # IMPORTANT: MUST use the websocket v2 endpoint
 speech_config = speechsdk.SpeechConfig(
@@ -52,9 +51,9 @@ for chunk in ["My ", "name ", "is ", "sarthak"]:
 print("[GPT END]", end="")
 
 # close tts input stream when GPT finished
-# tts_request.input_stream.close()
+tts_request.input_stream.close()
 
 # wait all tts audio bytes return
-# result = tts_task.get()
+result = tts_task.get()
 time.sleep(5)
 print("[TTS END]", end="")

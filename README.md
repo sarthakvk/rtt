@@ -79,8 +79,14 @@ To set up this project locally, follow these steps:
    - Open a web browser and navigate to `http://localhost:8000`.
 
 3. **Start a Translation Session**:
-   - Select the source and target languages.
-   - Speak into the microphone and listen to the translated output.
+   - You will need to be able to access your server on multiple devices, tools like `ngrok` can be used(change api endpoint from `localhost` to `ngrok` in frontend string)
+   - Select the source and target languages(you will need atleast 2 seperate devices to perform 2 way translation).
+   - Speak into the microphone of 1st device and listen to the translated output in the second device and vice-versa.
+
+4. **Start a Translation Session for single User**
+   - No need to use `ngrok`, `localhost` endpoint will work.
+   - when we have `ENV` environment variable set to `DEV` in .env file, we'll be able to play the translated audio in the same device
+   - see `WebsocketAudioOutputStream` and it's `write` method for handling the logic to send audio to speciic devices.
 
 ## Code Structure
 
