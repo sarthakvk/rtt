@@ -36,6 +36,15 @@ The project utilizes a modular architecture with the following key components:
 5. Translated text is converted into speech using the TTS module.
 6. Synthesized audio is sent back to the frontend and played to the user.
 
+### Real-Time Streaming
+
+The application achieves real-time translation and communication through the following mechanisms:
+
+- **WebSocket Connections**: Maintains persistent connections between the client and server to allow continuous streaming of audio data. This ensures low latency communication.
+- **Streaming Audio Processing**: Audio data is captured and sent to the server in small chunks, which are immediately processed by the STT and translation modules. This allows for quick feedback and minimizes delay.
+- **Asynchronous Processing**: Uses asynchronous programming to handle multiple concurrent connections and process incoming audio streams without blocking the main execution thread. This helps in maintaining the responsiveness of the application even with multiple users.
+- Although the tranlation only happens when we detect a complete sentence, this part is handled by azure's speech sdk
+
 ## Installation
 
 To set up this project locally, follow these steps:
