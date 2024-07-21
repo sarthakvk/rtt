@@ -16,7 +16,7 @@ class WebsocketAudioOutputStream(PushAudioOutputStreamCallback):
         self.websockets = websockets
         self.event_loop = event_loop
         self.client_id = client_id
-        self.env = os.getenv('ENV')
+        self.env = os.getenv("ENV")
 
     def write(self, audio_buffer: memoryview) -> int:
         try:
