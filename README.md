@@ -31,10 +31,9 @@ The project utilizes a modular architecture with the following key components:
 
 1. User selects source and target languages on the web interface.
 2. User speech is captured and sent to the backend via WebSocket.
-3. STT module transcribes the speech into text.
-4. Transcribed text is sent to the OpenAI translation service.
-5. Translated text is converted into speech using the TTS module.
-6. Synthesized audio is sent back to the frontend and played to the user.
+3. STT module transcribes the speech into text and translates it directly using Azure services.
+4. Translated text is converted into speech using the TTS module.
+5. Synthesized audio is sent back to the frontend and played to the user.
 
 ### Real-Time Streaming
 
